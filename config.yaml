@@ -1,0 +1,24 @@
+plugins:
+  detectors:
+    misleading:
+      MustContradictNLI:
+        hf_args:
+          device: cuda
+  generators:
+    openai:
+      OpenAICompatible:
+        extra_params:
+          extra_body:
+            enable_thinking: false
+        max_completion_tokens: 32768
+        max_tokens: 32768
+        min_p: 0.1
+        presence_penalty: 0.0
+        suppressed_params:
+        - n
+        - frequency_penalty
+        system_prompt_template: '{instruction}'
+        temperature: 0.1
+        top_k: 50
+        top_p: 0.95
+        uri: http://lrdn2109:9000/v1

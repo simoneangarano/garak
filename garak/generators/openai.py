@@ -134,7 +134,7 @@ audio_pattern = re.compile("|".join(audio_formats))
 class OpenAICompatible(Generator):
     """Generator base class for OpenAI compatible text2text restful API. Implements shared initialization and execution methods."""
 
-    ENV_VAR = "OpenAICompatible_API_KEY".upper()  # Placeholder override when extending
+    ENV_VAR = "API_KEY"  # Placeholder override when extending
 
     active = True
     supports_multiple_generations = False
@@ -177,12 +177,13 @@ class OpenAICompatible(Generator):
 
         self._load_unsafe()
 
-        if self.generator not in (
-            self.client.chat.completions,
-            self.client.completions,
-        ):
+        if self.generator == self.client.chat.completions:
+            logging.debug("Using chat completions for model %s", self.name)
+        elif self.generator == self.client.completions:
+            logging.debug("Using completions for model %s", self.name)
+        else:
             raise ValueError(
-                "Unsupported model at generation time in generators/openai.py; expected chat or completion, got neither"
+                "Unsupported model at generation time in generators/openai.py - please add a clause!"
             )
 
         self._validate_config()
@@ -263,6 +264,7 @@ class OpenAICompatible(Generator):
             # reload client once when consuming the generator
             self._load_unsafe()
 
+        # TODO: refactor to always use local scoped variables for _call_model client objects to avoid serialization state issues
         client = self.client
         generator = self.generator
         is_completion = generator == client.completions
@@ -311,7 +313,15 @@ class OpenAICompatible(Generator):
                 logging.error(msg)
                 return list()
 
-            create_args["messages"] = messages
+            if "{thinking prompt}" in self.system_prompt_template:
+                # add reasoning directive system message
+                reasoning_directive = {
+                    "role": "system",
+                    "content": "thinking on" if self.reasoning else "thinking off",
+                }
+                create_args["messages"] = [reasoning_directive] + messages
+            else:
+                create_args["messages"] = messages
 
         try:
             response = generator.create(**create_args)
@@ -339,19 +349,19 @@ class OpenAICompatible(Generator):
                 return [None]
 
         if is_completion:
-            reponse_message_list = [Message(c.text) for c in response.choices]
+            res = [Message(c.text) for c in response.choices]
         else:
-            reponse_message_list = [
-                Message(c.message.content) for c in response.choices
-            ]
-
-        if len(reponse_message_list) != generations_this_call:
+            res = [Message(c.message.content) for c in response.choices]
+        if len(res) != generations_this_call:
             raise garak.exception.BadGeneratorException(
                 "Generator did not return the requested number of responses (asked for %i got %i). supports_multiple_generations may be set incorrectly."
-                % (generations_this_call, len(reponse_message_list))
+                % (generations_this_call, len(res))
             )
 
-        return reponse_message_list
+        if self.reasoning:
+            for message in res:
+                message.text = message.text.split("</think>")[-1].strip()
+        return res
 
 
 class OpenAIGenerator(OpenAICompatible):
@@ -360,7 +370,7 @@ class OpenAIGenerator(OpenAICompatible):
     ENV_VAR = "OPENAI_API_KEY"
     active = True
     generator_family_name = "OpenAI"
-    supports_multiple_generations = True
+    supports_multiple_generations = False
 
     # remove uri as it is not overridable in this class.
     DEFAULT_PARAMS = {
@@ -419,7 +429,9 @@ class OpenAIReasoningGenerator(OpenAIGenerator):
         "presence_penalty": 0.0,
         "seed": None,
         "stop": ["#", ";"],
-        "suppressed_params": set(["n", "temperature", "max_tokens", "stop"]),
+        "temperature": 0.7,
+        "suppressed_params": set(["n", "stop"]),
+        "max_tokens": 32768,
         "retry_json": True,
         "max_completion_tokens": 1500,
     }
