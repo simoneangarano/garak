@@ -313,15 +313,15 @@ class OpenAICompatible(Generator):
                 logging.error(msg)
                 return list()
 
-            if "{thinking prompt}" in self.system_prompt_template:
-                # add reasoning directive system message
-                reasoning_directive = {
-                    "role": "system",
-                    "content": "thinking on" if self.reasoning else "thinking off",
-                }
-                create_args["messages"] = [reasoning_directive] + messages
+            reasoning_directive = self.system_prompt_template
+            if messages[0]["role"] == "system":
+                system_prompt = reasoning_directive.replace(
+                    "{instruction}", messages[0]["content"]
+                )
+                messages[0]["content"] = system_prompt.strip()
             else:
-                create_args["messages"] = messages
+                system_prompt = reasoning_directive.replace("{instruction}", "").strip()
+                messages.insert(0, {"role": "system", "content": system_prompt})
 
         try:
             response = generator.create(**create_args)
