@@ -322,8 +322,9 @@ class OpenAICompatible(Generator):
             else:
                 system_prompt = reasoning_directive.replace("{instruction}", "").strip()
                 messages.insert(0, {"role": "system", "content": system_prompt})
-
+            create_args["messages"] = messages
         try:
+            print(f"Creating {self.fullname} generation with args: {create_args}")
             response = generator.create(**create_args)
         except openai.BadRequestError as e:
             msg = "Bad request: " + str(repr(prompt))

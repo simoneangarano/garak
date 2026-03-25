@@ -9,7 +9,8 @@ plugins:
       OpenAICompatible:
         extra_params:
           extra_body:
-            enable_thinking: false
+            chat_template_kwargs:
+              enable_thinking: false
         max_completion_tokens: 32768
         max_tokens: 32768
         min_p: 0.1
@@ -17,8 +18,8 @@ plugins:
         suppressed_params:
         - n
         - frequency_penalty
-        system_prompt_template: '{instruction}'
-        temperature: 0.1
+        system_prompt_template: '{instruction} {thinking_prompt_smollm}'
+        temperature: 0.6
         top_k: 50
         top_p: 0.95
-        uri: http://lrdn2109:9000/v1
+        uri: http://lrdn0127:9000/v1
