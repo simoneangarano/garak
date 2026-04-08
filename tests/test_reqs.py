@@ -3,11 +3,10 @@
 
 import pytest
 
-try:
-    import tomllib
-except:
-    tomllib = None
-
+# try:
+#     import tomllib
+# except:
+import tomli as tomllib
 import garak._plugins
 
 
@@ -30,13 +29,13 @@ def test_requirements_txt_pyproject_toml():
         pyproject_reqs.sort()  # for easier output debugging
     # assert len(reqtxt_reqs) == len(pyproject_reqs) # same number of requirements
     spurious_req = set(reqtxt_reqs) - set(pyproject_reqs)
-    assert (
-        spurious_req == set()
-    ), f"spurious items in requirements.txt, {spurious_req}"  # things in reqtxt but not in pyproject
+    assert spurious_req == set(), (
+        f"spurious items in requirements.txt, {spurious_req}"
+    )  # things in reqtxt but not in pyproject
     spurious_pyproject = set(pyproject_reqs) - set(reqtxt_reqs)
-    assert (
-        spurious_pyproject == set()
-    ), f"spurious items in pyproject.toml, {spurious_pyproject}"  # things in pyproject but not in reqtxt
+    assert spurious_pyproject == set(), (
+        f"spurious items in pyproject.toml, {spurious_pyproject}"
+    )  # things in pyproject but not in reqtxt
 
 
 PLUGIN_TYPES = garak._plugins.PLUGIN_TYPES
