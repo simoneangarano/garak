@@ -324,7 +324,7 @@ class OpenAICompatible(Generator):
                 messages.insert(0, {"role": "system", "content": system_prompt})
             create_args["messages"] = messages
         try:
-            print(f"Creating {self.fullname} generation with args: {create_args}")
+            # print(f"Creating {self.fullname} generation with args: {create_args}")
             response = generator.create(**create_args)
         except openai.BadRequestError as e:
             msg = "Bad request: " + str(repr(prompt))
@@ -359,7 +359,7 @@ class OpenAICompatible(Generator):
                 % (generations_this_call, len(res))
             )
 
-        if self.reasoning:
+        if self.extra_params["extra_body"]["enable_thinking"]:
             for message in res:
                 message.text = message.text.split("</think>")[-1].strip()
         return res

@@ -10,18 +10,16 @@ plugins:
         extra_params:
           extra_body:
             enable_thinking: true
-            chat_template_kwargs:
-              enable_thinking: true
         frequency_penalty: 0.0
-        max_completion_tokens: 32768
-        max_tokens: 32768
+        max_completion_tokens: 8192
+        max_tokens: 8192
         min_p: 0.0
         presence_penalty: 1.5
         repetition_penalty: 1.0
         suppressed_params:
         - n
         system_prompt_template: '{instruction}'
-        temperature: 0
+        temperature: 1
         top_k: 20
         top_p: 0.95
-        uri: http://lrdn1875:9000/v1
+        uri: http://127.0.0.1:8001/v1
