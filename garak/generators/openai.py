@@ -399,8 +399,20 @@ class OpenAICompatible(Generator):
                 % (generations_this_call, len(res))
             )
 
-        if self.extra_params["extra_body"]["enable_thinking"]:
+        if (
+            getattr(self, "extra_params", {})
+            .get("extra_body", {})
+            .get("enable_thinking")
+        ):
             for message in res:
+                if message.text is None:
+                    # servers with a reasoning parser return content: null when the
+                    # model emits only reasoning tokens (or is cut off mid-think);
+                    # leave the output as None so garak logs a failed generation
+                    logging.debug(
+                        "%s returned no content, keeping empty output", self.fullname
+                    )
+                    continue
                 message.text = message.text.split("</think>")[-1].strip()
         return res
 
