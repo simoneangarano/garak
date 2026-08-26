@@ -402,6 +402,7 @@ class OpenAICompatible(Generator):
         if (
             getattr(self, "extra_params", {})
             .get("extra_body", {})
+            .get("chat_template_kwargs", {})
             .get("enable_thinking")
         ):
             for message in res:
