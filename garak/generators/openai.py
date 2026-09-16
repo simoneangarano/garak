@@ -152,6 +152,7 @@ class OpenAICompatible(Generator):
         "suppressed_params": set(),
         "retry_json": True,
         "extra_params": {},
+        "request_timeout": 600,
     }
 
     _unsafe_attributes = ["client", "generator"]
@@ -175,7 +176,12 @@ class OpenAICompatible(Generator):
     def _load_unsafe(self):
         # When extending `OpenAICompatible` this method is a likely location for target application specific
         # customization and must populate self.generator with an openai api compliant object
-        self.client = openai.OpenAI(base_url=self.uri, api_key=self.api_key)
+        self.client = openai.OpenAI(
+            base_url=self.uri,
+            api_key=self.api_key,
+            timeout=self.request_timeout,
+            max_retries=0,
+        )
         if self.name in ("", None):
             raise ValueError(
                 f"{self.generator_family_name} requires model name to be set, e.g. --target_name org/private-model-name"
